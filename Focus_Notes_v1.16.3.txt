@@ -4258,9 +4258,10 @@ margin-top: 2px;
 
     function showStatus(msg) {
         const s = document.getElementById('status');
-        s.innerText = msg;
+        if (!s) return;
+        s.innerText = String(msg == null ? "" : msg);
         s.style.opacity = "1";
-        setTimeout(() => s.style.opacity = "0", 2000);
+        setTimeout(function () { s.style.opacity = "0"; }, 2000);
     }
 
     function trackerSelectionKeys(field) {
@@ -4385,8 +4386,12 @@ margin-top: 2px;
     }
 
     function quickCopy(txt, el) {
-        forceCopy(txt).then((copied) => {
-            if (!copied || !el) return;
+        if (!el || typeof el !== "object" || !el.setAttribute) {
+            return Promise.resolve(false);
+        }
+
+        return forceCopy(txt).then((copied) => {
+            if (!copied) return false;
 
             if (typeof el._focusNotesCopyOriginal !== "string") {
                 el._focusNotesCopyOriginal = el.innerText;
@@ -4409,6 +4414,7 @@ margin-top: 2px;
                 delete el._focusNotesCopyOriginal;
                 delete el._focusNotesCopyOriginalAria;
             }, 1000);
+            return true;
         });
     }
 
@@ -4664,7 +4670,7 @@ margin-top: 2px;
 
     function rememberQuickScratchScrollPosition(field) {
         if (!field || field.id !== "brainDump") return;
-        if (Number.isFinite(Number(field._focusNotesScrollTop))) return;
+        if (typeof field._focusNotesScrollTop === "number" && Number.isFinite(field._focusNotesScrollTop)) return;
         var container = document.querySelector(".container");
         if (!container) return;
         field._focusNotesScrollTop = container.scrollTop;
